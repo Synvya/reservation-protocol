@@ -135,4 +135,4 @@ To introduce new message types (e.g., `order.request`, `order.response`):
 
 ## 🧾 License
 
-© 2025 Synvya, Inc. — Schemas released under the MIT License.
+All NIPs are public domain.
