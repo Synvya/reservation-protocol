@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://synvya.com/schemas/reservation.response.schema.json",
+  "title": "Synvya Reservation Response Payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "iso_time"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "declined",
+        "cancelled"
+      ]
+    },
+    "iso_time": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Proposed or confirmed time; null when declined/cancelled"
+    },
+    "message": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "table": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Optional table identifier"
+    }
+  }
+}
