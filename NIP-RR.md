@@ -12,10 +12,10 @@ This NIP defines a protocol to manage restaurant reservations via Nostr. The pro
 
 The Restaurant Reservation Protocol uses four event kinds to support a complete negotiation flow.
 
-- `kind:9901` - `reservation.request`: Initial message sent  by the customer to make a reservation request
-- `kind:9902` - `reservation.response`: Message sent by the restaurant or the customer to finalize the exchange of messages. Must include the firm status for the reservation of `confirmed`, `declined`, or `cancelled`
-- `kind:9903` - `reservation.modification.request`: Message sent to modify a firm reservation or a reservation under negotiation
-- `kind:9904` - `reservation.modification.response`: Message sent in response to a `reservation.modification.request`
+- `reservation.request` - `kind:9901`: Initial message sent  by the customer to make a reservation request
+- `reservation.response` - `kind:9902`: Message sent by the restaurant or the customer to finalize the exchange of messages with status `confirmed`, `declined`, or `cancelled`
+- `reservation.modification.request` - `kind:9903`: Message sent to modify a firm reservation or a reservation under negotiation
+- `reservation.modification.response` - `kind:9904`: Message sent in response to a `reservation.modification.request`
 
 
 Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:9903` and `kind:9904` is optional but strongly recommended.
@@ -29,7 +29,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 {
   "id": "<32-byte hex of unsigned event hash>",
   "pubkey": "<senderPublicKey>",
-  "created_at": <unix timestamp>,
+  "created_at": <unix timestamp in seconds>,
   "kind": 9901,
   "tags": [
     ["p", "<restaurantPublicKey>", "<relayUrl>"]
@@ -43,7 +43,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 **Content Structure:**
 ```jsonc
 {
-  "party_size": <integer 1-20>,
+  "party_size": <integer between 1 and 20>,
   "iso_time": "<ISO8601 datetime with timezone>",
   "notes": "<optional string, max 2000 chars>",
   "contact": {
@@ -76,7 +76,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 {
   "id": "<32-byte hex of unsigned event hash>",
   "pubkey": "<senderPublicKey>",
-  "created_at": <unix timestamp>,
+  "created_at": <unix timestamp in seconds>,
   "kind": 9902,
   "tags": [
     ["p", "<recipientPublicKey>", "<relay-url>"],
@@ -118,7 +118,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 {
   "id": "<32-byte hex of unsigned event hash>",
   "pubkey": "<senderPubKey>",
-  "created_at": <unix timestamp>,
+  "created_at": <unix timestamp in seconds>,
   "kind": 9903,
   "tags": [
     ["p", "<recipientPublicKey>", "<relay-url>"],
@@ -133,7 +133,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 **Content Structure:**
 ```jsonc
 {
-  "party_size": <integer 1-20>,
+  "party_size": <integer between 1 and 20>,
   "iso_time": "<ISO8601 datetime with timezone>",
   "notes": "<optional string, max 2000 chars>",
   "contact": {
@@ -169,7 +169,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 {
   "id": "<32-byte hex of unsigned event hash>",
   "pubkey": "<senderPublicKey>",
-  "created_at": <unix timestamp>,
+  "created_at": <unix timestamp in seconds>,
   "kind": 9904,
   "tags": [
     ["p", "<recipientPublicKey>", "<relay-url>"],
@@ -435,7 +435,7 @@ Include the following tags in the ```kind:0``` event for the restaurant:
 {
   "id": "<32-byte hex of unsigned event hash>",
   "pubkey": "<restaurantPublicKey>",
-  "created_at": <unix timestamp>,
+  "created_at": <unix timestamp in seconds>,
   "kind": 0,
   "tags": [
     ["L", "com.synvya.merchant"],

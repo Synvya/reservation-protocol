@@ -32,10 +32,10 @@ schemas/
 
 | Schema File | Purpose |
 |--------------|----------|
-| `reservation.request.schema.json` | Defines user → restaurant booking request (kind 9901) |
-| `reservation.response.schema.json` | Defines restaurant → user response (kind 9902) |
-| `reservation.modification.request.schema.json` | Defines reservation modification request (kind 9903) |
-| `reservation.modification.response.schema.json` | Defines reservation modification response (kind 9904) |
+| `reservation.request.schema.json` | Schema for reservation.request message (kind 9901) |
+| `reservation.response.schema.json` | Schema for reservation.response message (kind 9902) |
+| `reservation.modification.request.schema.json` | Schema for reservation.modification.request message (kind 9903) |
+| `reservation.modification.response.schema.json` | Schema for reservation.modification.response message (kind 9904) |
 
 ---
 
