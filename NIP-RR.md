@@ -41,7 +41,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 ```
 
 **Content Structure:**
-```jsonc
+```yaml
 {
   "party_size": <integer between 1 and 20>,
   "iso_time": "<ISO8601 datetime with timezone>",
@@ -72,7 +72,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 ### Reservation Response - Kind:9902
 
 **Rumor Event Structure:**
-```jsonc
+```yaml
 {
   "id": "<32-byte hex of unsigned event hash>",
   "pubkey": "<senderPublicKey>",
@@ -89,7 +89,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 ```
 
 **Content Structure:**
-```jsonc
+```yaml
 {
   "status": "<confirmed|declined|cancelled>",
   "iso_time": "<ISO8601 datetime with timezone> | null",
@@ -114,7 +114,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 ### Reservation Modification Request - Kind:9903
 
 **Rumor Event Structure:**
-```jsonc
+```yaml
 {
   "id": "<32-byte hex of unsigned event hash>",
   "pubkey": "<senderPubKey>",
@@ -131,7 +131,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 ```
 
 **Content Structure:**
-```jsonc
+```yaml
 {
   "party_size": <integer between 1 and 20>,
   "iso_time": "<ISO8601 datetime with timezone>",
@@ -165,7 +165,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 ### Reservation Modification Response - Kind:9904
 
 **Rumor Event Structure:**
-```jsonc
+```yaml
 {
   "id": "<32-byte hex of unsigned event hash>",
   "pubkey": "<senderPublicKey>",
@@ -182,7 +182,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 ```
 
 **Content Structure:**
-```jsonc
+```yaml
 {
   "status": "<confirmed|declined>",
   "iso_time": "<ISO8601 datetime with timezone> | null",
@@ -213,7 +213,7 @@ All reservation messages MUST follow the [NIP-59](https://github.com/nostr-proto
 
 
 **Gift Wrap**
-```jsonc
+```yaml
 {
   "id": "<usual hash>",
   "pubkey": randomPublicKey,
@@ -330,7 +330,7 @@ Restaurants MUST advertise their capability to handle reservation messages using
 
 Restaurants MUST publish a `kind:31990` handler information event that declares support for all reservation message kinds:
 
-```jsonc
+```yaml
 {
   "kind": 31990,
   "pubkey": "<restaurantPublicKey>",
@@ -354,7 +354,7 @@ Restaurants MUST publish a `kind:31990` handler information event that declares 
 Restaurants MUST publish four `kind:31989` handler recommendation events, one for each supported event kind:
 
 **For kind:9901 (reservation.request):**
-```jsonc
+```yaml
 {
   "kind": 31989,
   "pubkey": "<restaurantPublicKey>",
@@ -367,7 +367,7 @@ Restaurants MUST publish four `kind:31989` handler recommendation events, one fo
 ```
 
 **For kind:9902 (reservation.response):**
-```jsonc
+```yaml
 {
   "kind": 31989,
   "pubkey": "<restaurantPublicKey>",
@@ -380,7 +380,7 @@ Restaurants MUST publish four `kind:31989` handler recommendation events, one fo
 ```
 
 **For kind:9903 (reservation.modification.request):**
-```jsonc
+```yaml
 {
   "kind": 31989,
   "pubkey": "<restaurantPublicKey>",
@@ -393,7 +393,7 @@ Restaurants MUST publish four `kind:31989` handler recommendation events, one fo
 ```
 
 **For kind:9904 (reservation.modification.response):**
-```jsonc
+```yaml
 {
   "kind": 31989,
   "pubkey": "<restaurantPublicKey>",
@@ -431,7 +431,7 @@ Clients discovering restaurants that support reservations SHOULD:
 Restaurants that do not support NIP-RR but want to still be found in basic searches should publish a label ```restaurant``` within the namespace ```com.synvya.merchant```.
 
 Include the following tags in the ```kind:0``` event for the restaurant:
-```jsonc
+```yaml
 {
   "id": "<32-byte hex of unsigned event hash>",
   "pubkey": "<restaurantPublicKey>",
