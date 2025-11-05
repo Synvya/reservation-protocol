@@ -25,7 +25,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 ### Reservation Request - Kind:9901
 
 **Rumor Event Structure:**
-```jsonc
+```jaml
 {
   "id": "<32-byte hex of unsigned event hash>",
   "pubkey": "<senderPublicKey>",
