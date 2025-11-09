@@ -1,24 +1,32 @@
 NIP-RR
 ======
 
-Restaurant Reservation Protocol
--------------------------------
+Restaurant Reservation and Verified Reviews Protocol
+----------------------------------------------------
 
 `draft` `optional`
 
-This NIP defines a protocol to manage restaurant reservations via Nostr. The protocol uses 4 different messages, each with its own kind, that are sent unsigned, sealed, and gift wrapped between the parties to maintain privacy.
+This NIP defines a protocol to manage restaurant reservations and verified reviews via Nostr. 
+
+The reservation process uses 4 different messages, each with its own kind, that are sent unsigned, sealed, and gift wrapped between the parties to maintain the privacy of the customer. Only the customer and the restaurant are aware of the reservation.
+
+The review flow uses 2 different messages, each with its own kind, and it ensures that only verified customers can issue a review.
+
+The customer's identify, reservation date, and time becomes public when issuing a review. 
 
 ## Overview
 
-The Restaurant Reservation Protocol uses four event kinds to support a complete negotiation flow.
+The Restaurant Reservation and Verified Reviews Protocol uses four event kinds to support a complete negotiation flow and 2 event kinds to support verified reviews:
 
 - `reservation.request` - `kind:9901`: Initial message sent  by the customer to make a reservation request
 - `reservation.response` - `kind:9902`: Message sent by the restaurant or the customer to finalize the exchange of messages with status `confirmed`, `declined`, or `cancelled`
 - `reservation.modification.request` - `kind:9903`: Message sent to modify a firm reservation or a reservation under negotiation
 - `reservation.modification.response` - `kind:9904`: Message sent in response to a `reservation.modification.request`
+- `visit.attestation` - `kind:9905`: Message sent by the restaurant to attest that a specific customer visited with a given reservation
+- `verified.review` - `kind:9906`: Public review written by the customer and optionally marked as “verified” by embedding a prior `kind:9905` visit attestation
 
 
-Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:9903` and `kind:9904` is optional but strongly recommended.
+Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:9903`, `kind:9904`, `kind:9905`, and `kind:9906` is optional but strongly recommended.
 
 ## Kind Definitions
 
@@ -176,7 +184,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
     ["e", "<unsigned-9901-rumor-id>", "", "root"],
     // Additional tags MAY be included
   ],
-  "content": "<content-in-plain-text"
+  "content": "<content-in-plain-text>"
   // Note: No signature field - this is an unsigned rumor
 }
 ```
@@ -200,6 +208,76 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 
 **Threading:**
 - MUST include an `e` tags with `["e", "<unsigned-9901-rumor-id>", "", "root"]` referencing the unsigned rumor ID of the original request.
+
+---
+
+### Visit Attestation – Kind:9905
+
+`kind:9905` is a **signed** nostr event created by the restaurant to attest that a visit occurred under a given reservation thread. The event is created by the restaurant system when a reservation is fulfilled (for example, when the check is closed) and sent privately to the customer using an encrypted direct message (`kind:14`) and is **never** published to public relays to maintain the restaurant visit private until the customer decides to publish a review.
+
+The event is intended as a visit token that the customer MAY later embed in a public review. If the customer does not publish a review, then the restaurant visit will remain private. 
+
+**Event Structure:**
+```yaml
+{
+  "id": "<32-byte hex of event hash>",
+  "pubkey": "<restaurantPublicKey>",
+  "created_at": <unix timestamp in seconds>,
+  "kind": 9905,
+  "tags": [
+    ["rr", "<unsigned-9901-rumor-id>"],  # Reservation thread id 
+    ["p", "<customerPublicKey>"]
+  ],
+  "content": "",
+  "sig": "<signed by restaurantPrivateKey>"
+}
+```
+
+**Required Tags:**
+	•	`["rr", "<unsigned-9901-rumor-id>"]`: MUST reference the unsigned rumor ID of the original reservation.request `kind:9901` message. This value is the reservation thread id.
+	•	`["p", "<customerPublicKey>"]`: MUST reference the customer associated with the visit.
+
+---
+
+### Verified Review – Kind:9906
+
+`kind:9906` is a **signed** public event created by the customer to publish a review for a past visit. Reviews are “verified” by embedding the associated `visit attestation` `kind:9905` event received directly from the restaurant via direct message.
+
+**Event Structure:**
+```yaml
+{
+  "id": "<32-byte hex of event hash>",
+  "pubkey": "<customerPublicKey>",
+  "created_at": <unix timestamp in seconds>,
+  "kind": 9906,
+  "tags": [
+    ["p", "<restaurantPublicKey>"],
+    ["rr", "<unsigned-9901-rumor-id>"],          # Reservation thread id 
+    ["rating", "<1-5>"],
+    ["verified", "<base64-encoded-visit-9905>"] 
+    # Additional tags MAY be included
+  ],
+  "content": "<free-form review text>",
+  "sig": "<signed by customerPrivateKey>"
+}
+```
+
+**Required Tags**:
+	•	`["p", "<restaurantPublicKey>"]`: MUST specify the restaurant being reviewed.
+	•	`["rr", "<unsigned-9901-rumor-id>"]`: MUST reference the same reservation thread id T used during the reservation flow.
+	•	`["rating", "<1-5>"]`: Numeric rating for the visit. The rating scale MUST be between 1 and 5.
+	•	`["verified", "<base64-encoded-visit-9905>"]`: Tag used to mark a review as a verified visit. The value MUST be a base64 encoding of the full serialized kind:9905 visit attestation event.
+
+A client MAY treat a `verified.review` `kind:9906` event as a **verified review** if all of the following conditions are met:
+  1.	The event has a `["verified", "<payload>"]` tag.
+	2.	Decoding `<payload>` from base64 yields a valid nostr `visit.attestation` `kind:9905` event with the following properties:
+	  •	`pubkey` matches the restaurant public key indicated by the `verified.review` `kind:9906` `["p", "<restaurantPublicKey>"]` tag
+	  •	There is a `["p", "<customerPublicKey>"]` tag where `<customerPublicKey>` matches the `pubkey` field of the `verified.review` `kind:9906` event
+	  •	There is a `["rr", "<unsigned-9901-rumor-id>"]` tag matching the `["rr", "<unsigned-9901-rumor-id>"]` tag of the `verified.review` `kind:9906` event
+	  •	The `visit.attestation` `kind:9905` event has a valid signature computed according to NIP-01.
+
+If verification succeeds, clients MAY label the review as a “verified visit”. If verification fails, clients MUST NOT display the review. 
+
 
 ---
 
@@ -237,6 +315,20 @@ All reservation messages MUST follow the [NIP-59](https://github.com/nostr-proto
   "sig": "<signed by randomPrivateKey>"
 }
 ```
+
+The `visit.attestation` `kind:9905` message is sent from the restaurant to the customer as the content of a direct message `kind:14`. 
+
+{
+  "kind": 14,
+  "pubkey": "<restaurantPublicKey>",
+  "created_at": <unix timestamp in seconds>,
+  "tags": [
+    ["p", "<customerPublicKey>"],
+    ["e", "<unsigned-9901-rumor-id>", "", "root"]
+  ],
+  "content": "<plain-text serialized and signed kind-9905 event>"
+  // no sig field – this is a rumor, encrypted and transported via NIP-59
+}
 
 ## Protocol Flow
 
@@ -284,6 +376,27 @@ No further action is expected from the restaurant.
 
 Note: *This flow assumes that there is an existing confirmed reservation initiated by a `reservation.request` `kind:9901` message to the restaurant. All messages should include the `"e"` tag with the rumor ID of the original `reservation.request` message to match the modification to the original reservation.*
 
+### Visit Attestation Issued By The Restaurant
+1. After the customer has dined and the visit is considered fulfilled, the restaurant marks the reservation as completed.
+2. A `visit.attestation` `kind:9905` message is automatically sent to the customer via a `kind:14` direct message. The `visit.attestation` `kind:9905` message is **never** published to a relay.
+3. Message exchange ends
+
+No further action is expected from the restaurant or the customer. 
+
+### Customer Elects to Not Publish a Review
+1. Customer receives the `visit.attestation` `kind:9905` message from the restaurant.
+2. Customer chooses to not issue a review
+3. Message exchange ends
+
+The fact that the customer dined at the restaurant remains a private fact known only to the customer and the restaurant. 
+
+### Customer Elects to Publish a Review
+1. Customer receives the `visit.attestation` `kind:9905` message from the restaurant.
+2. Customer wrrites a review and publishes it as a `verified.review` `kind:9906` event that includes the `["verified", "<base64-encoded-visit-9905>"]` tag 
+3. Message exchange ends
+
+The fact that the customer dined at the restaurant becomes a public fact. 
+
 
 ---
 
@@ -296,6 +409,8 @@ Clients MUST validate payloads against JSON schemas before processing:
 - Kind 9902: Validate against `reservation.response.schema.json`
 - Kind 9903: Validate against `reservation.modification.request.schema.json`
 - Kind 9904: Validate against `reservation.modification.response.schema.json`
+- Kind 9905: Validate against `visit.attestation.schema.json`
+- Kind 9906: Validate against `review.schema.json`
 
 Invalid payloads MUST be rejected and not processed further.
 
@@ -307,7 +422,7 @@ Invalid payloads MUST be rejected and not processed further.
 
 ### Self CC Pattern
 
-Following [NIP-17](https://github.com/nostr-protocol/nips/blob/master/17.md), senders SHOULD publish gift wraps to both the recipient AND themselves (self-addressed). This ensures:
+Following [NIP-17](https://github.com/nostr-protocol/nips/blob/master/17.md) and [NIP-59](https://github.com/nostr-protocol/nips/blob/master/59.md), senders SHOULD publish gift wraps to both the recipient AND themselves (self-addressed). This ensures:
 - Senders can retrieve their own messages across devices
 - Full conversation history is recoverable with the sender's private key
 - Each recipient gets a separately encrypted gift wrap
@@ -447,3 +562,12 @@ Include the following tags in the ```kind:0``` event for the restaurant:
   "sig": "<signed by restaurantPrivateKey>"  
 }
 ```
+
+## Verified Reviews Discovery
+
+A client searching for verified reviews for a given restaurant with `restaurantPublicKey` SHOULD:
+  1. Query for `kind:9906` events with:
+	  •	`["p", "<restaurantPublicKey>"]` to select reviews for this restaurant
+	  •	For each review, check for a `["verified", "<payload>"]` tag and, if present, perform the verification steps defined in section [Verified Review - Kind:9906](#verified-review–kind:9906).
+
+If verification succeeds, the review MAY be marked as “Verified Review" and shown to the user. Unverified reviews should be ignored. 

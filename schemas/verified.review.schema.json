@@ -1,0 +1,204 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemata.nostr.watch/note/kind/9906",
+  "title": "Verified Review Event (Kind 9906)",
+  "description": "Full event schema for verified.review (kind 9906) - signed public event created by customer to publish a verified review",
+  "allOf": [
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Deterministic event hash as defined in NIP-01",
+          "errorMessage": "id must be a 64-character lowercase hex string"
+        },
+        "content": {
+          "type": "string",
+          "errorMessage": "content must be a string",
+          "description": "The content of the note"
+        },
+        "created_at": {
+          "type": "integer",
+          "errorMessage": "created_at must be a timestamp expressed in seconds (not milliseconds)",
+          "description": "The timestamp of the note creation"
+        },
+        "kind": {
+          "type": "integer"
+        },
+        "pubkey": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "errorMessage": "pubkey must be a secp256k1 public key",
+          "description": "The public key of the note's author"
+        },
+        "tags": {
+          "type": "array",
+          "errorMessage": "tags must be an array of valid tag tuples",
+          "description": "The tags of the note",
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "sig": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{128}$",
+          "errorMessage": "sig must be a 128-character lowercase hex string",
+          "description": "Signature of the event"
+        }
+      },
+      "required": [
+        "content",
+        "created_at",
+        "kind",
+        "tags",
+        "sig"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": 9906,
+          "description": "Kind 9906 identifies a verified review",
+          "errorMessage": "kind must equal 9906"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Deterministic event hash as defined in NIP-01",
+          "errorMessage": "id must be a 64-character lowercase hex string"
+        },
+        "pubkey": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Customer public key",
+          "errorMessage": "pubkey must be a 64-character lowercase hex string (secp256k1 public key)"
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Free-form review text",
+          "errorMessage": "content must be a non-empty string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "minItems": 4,
+          "allOf": [
+            {
+              "contains": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "const": "p",
+                    "description": "Tag identifier"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$",
+                    "description": "Restaurant public key",
+                    "errorMessage": "p tag value must be a 64-character lowercase hex string"
+                  }
+                ],
+                "additionalItems": false
+              },
+              "errorMessage": {
+                "contains": "tags must include a p tag with format ['p', '<restaurantPublicKey>']"
+              }
+            },
+            {
+              "contains": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "const": "rr",
+                    "description": "Tag identifier"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$",
+                    "description": "Unsigned rumor ID of the original reservation.request (kind 9901)",
+                    "errorMessage": "rr tag value must be a 64-character lowercase hex string (unsigned rumor ID)"
+                  }
+                ],
+                "additionalItems": false
+              },
+              "errorMessage": {
+                "contains": "tags must include an rr tag with format ['rr', '<unsigned-9901-rumor-id>']"
+              }
+            },
+            {
+              "contains": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "const": "rating",
+                    "description": "Tag identifier"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[1-5]$",
+                    "description": "Numeric rating between 1 and 5",
+                    "errorMessage": "rating tag value must be a string '1', '2', '3', '4', or '5'"
+                  }
+                ],
+                "additionalItems": false
+              },
+              "errorMessage": {
+                "contains": "tags must include a rating tag with format ['rating', '<1-5>']"
+              }
+            },
+            {
+              "contains": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "const": "verified",
+                    "description": "Tag identifier"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9+/]+=*$",
+                    "description": "Base64 encoded kind:9905 visit attestation event",
+                    "errorMessage": "verified tag value must be a valid base64 encoded string"
+                  }
+                ],
+                "additionalItems": false
+              },
+              "errorMessage": {
+                "contains": "tags must include a verified tag with format ['verified', '<base64-encoded-visit-9905>']"
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "pubkey",
+        "sig"
+      ]
+    }
+  ]
+}
+
