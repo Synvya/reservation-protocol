@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://schemata.nostr.watch/note/kind/9906",
-  "title": "Verified Review Event (Kind 9906)",
-  "description": "Full event schema for verified.review (kind 9906) - signed public event created by customer to publish a verified review",
+  "$id": "https://schemata.nostr.watch/note/kind/31555",
+  "title": "Verified Business Review Event (Kind 31555)",
+  "description": "Full event schema for verified business review (kind 31555) - signed public event created by customer to publish a verified review following NIP-99 market specification",
   "allOf": [
     {
       "type": "object",
@@ -64,9 +64,9 @@
       "type": "object",
       "properties": {
         "kind": {
-          "const": 9906,
-          "description": "Kind 9906 identifies a verified review",
-          "errorMessage": "kind must equal 9906"
+          "const": 31555,
+          "description": "Kind 31555 identifies a verified business review",
+          "errorMessage": "kind must equal 31555"
         },
         "id": {
           "type": "string",
@@ -104,20 +104,20 @@
                 "maxItems": 2,
                 "items": [
                   {
-                    "const": "p",
+                    "const": "d",
                     "description": "Tag identifier"
                   },
                   {
                     "type": "string",
-                    "pattern": "^[a-f0-9]{64}$",
-                    "description": "Restaurant public key",
-                    "errorMessage": "p tag value must be a 64-character lowercase hex string"
+                    "pattern": "^p:[a-f0-9]{64}$",
+                    "description": "Business identifier in format p:<businessPublicKey>",
+                    "errorMessage": "d tag value must be in format 'p:<64-character-hex-string>'"
                   }
                 ],
                 "additionalItems": false
               },
               "errorMessage": {
-                "contains": "tags must include a p tag with format ['p', '<restaurantPublicKey>']"
+                "contains": "tags must include a d tag with format ['d', 'p:<businessPublicKey>']"
               }
             },
             {
@@ -127,27 +127,27 @@
                 "maxItems": 2,
                 "items": [
                   {
-                    "const": "rr",
+                    "const": "e",
                     "description": "Tag identifier"
                   },
                   {
                     "type": "string",
                     "pattern": "^[a-f0-9]{64}$",
                     "description": "Unsigned rumor ID of the original reservation.request (kind 9901)",
-                    "errorMessage": "rr tag value must be a 64-character lowercase hex string (unsigned rumor ID)"
+                    "errorMessage": "e tag value must be a 64-character lowercase hex string (unsigned rumor ID)"
                   }
                 ],
                 "additionalItems": false
               },
               "errorMessage": {
-                "contains": "tags must include an rr tag with format ['rr', '<unsigned-9901-rumor-id>']"
+                "contains": "tags must include an e tag with format ['e', '<unsigned-9901-rumor-id>']"
               }
             },
             {
               "contains": {
                 "type": "array",
                 "minItems": 2,
-                "maxItems": 2,
+                "maxItems": 3,
                 "items": [
                   {
                     "const": "rating",
@@ -155,15 +155,20 @@
                   },
                   {
                     "type": "string",
-                    "pattern": "^[1-5]$",
-                    "description": "Numeric rating between 1 and 5",
-                    "errorMessage": "rating tag value must be a string '1', '2', '3', '4', or '5'"
+                    "pattern": "^(0|1)$",
+                    "description": "Primary rating: 0 for thumbs down, 1 for thumbs up",
+                    "errorMessage": "Primary rating tag value must be '0' or '1'"
+                  },
+                  {
+                    "type": "string",
+                    "const": "thumb",
+                    "description": "Marker for primary rating"
                   }
                 ],
                 "additionalItems": false
               },
               "errorMessage": {
-                "contains": "tags must include a rating tag with format ['rating', '<1-5>']"
+                "contains": "tags must include a primary rating tag with format ['rating', '<0 or 1>', 'thumb']"
               }
             },
             {
@@ -179,14 +184,14 @@
                   {
                     "type": "string",
                     "pattern": "^[A-Za-z0-9+/]+=*$",
-                    "description": "Base64 encoded kind:9905 visit attestation event",
+                    "description": "Base64 encoded kind:9905 transaction attestation event",
                     "errorMessage": "verified tag value must be a valid base64 encoded string"
                   }
                 ],
                 "additionalItems": false
               },
               "errorMessage": {
-                "contains": "tags must include a verified tag with format ['verified', '<base64-encoded-visit-9905>']"
+                "contains": "tags must include a verified tag with format ['verified', '<base64-encoded-transaction-attestation-event-kind-9905>']"
               }
             }
           ]
@@ -201,4 +206,3 @@
     }
   ]
 }
-

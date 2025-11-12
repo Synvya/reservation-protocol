@@ -1,10 +1,10 @@
 # Synvya Nostr Schema and Example Reference
 
-This directory defines the **Synvya reservation message schemas**, plus example payloads that conform to the Nostr-based restaurant reservation protocol.
+This directory defines the **Synvya reservation message schemas**, plus example payloads that conform to the Nostr-based reservation protocol.
 
 The schemas formalize the JSON structure of each payload, enabling validation, linting, and auto-generation of SDK models.
 
-For complete protocol documentation, see [`../NIP-RR.md`](../NIP-RR.md).
+For complete protocol documentation, see [`../rp.md`](../rp.md).
 
 ---
 
@@ -24,6 +24,8 @@ schemas/
 ├── reservation.response.schema.json
 ├── reservation.modification.request.schema.json
 ├── reservation.modification.response.schema.json
+├── transaction.attestation.schema.json
+├── verified.review.schema.json
 └── README.md
 ```
 
@@ -31,23 +33,27 @@ schemas/
 
 ## 🧩 Schema Overview
 
-We provide **one schema per event kind** that validates the complete unsigned rumor event structure including tags.
+We provide **one schema per event kind** that validates the complete event structure including tags.
 
 | Schema File | Purpose |
 |--------------|----------|
-| `reservation.request.schema.json` | Full event schema for kind 9901 (includes `p` tag validation) |
-| `reservation.response.schema.json` | Full event schema for kind 9902 (includes `p` and `e` tag validation) |
-| `reservation.modification.request.schema.json` | Full event schema for kind 9903 (includes `p` and `e` tag validation) |
-| `reservation.modification.response.schema.json` | Full event schema for kind 9904 (includes `p` and `e` tag validation) |
+| `reservation.request.schema.json` | Full event schema for kind 9901 - unsigned rumor (includes `p` tag validation) |
+| `reservation.response.schema.json` | Full event schema for kind 9902 - unsigned rumor (includes `p` and `e` tag validation) |
+| `reservation.modification.request.schema.json` | Full event schema for kind 9903 - unsigned rumor (includes `p` and `e` tag validation) |
+| `reservation.modification.response.schema.json` | Full event schema for kind 9904 - unsigned rumor (includes `p` and `e` tag validation) |
+| `transaction.attestation.schema.json` | Full event schema for kind 9905 - signed event (includes `e` and `p` tag validation) |
+| `verified.review.schema.json` | Full event schema for kind 31555 - signed public event (includes `d`, `e`, `rating`, and `verified` tag validation) |
 
 ### Tag Requirements
 
 Schemas validate required tags:
 
-- **Kind 9901**: Requires `p` tag (restaurant public key)
+- **Kind 9901**: Requires `p` tag (business public key)
 - **Kind 9902**: Requires `p` tag (recipient) AND `e` tag with `["e", "<unsigned-9901-rumor-id>", "", "root"]`
 - **Kind 9903**: Requires `p` tag (recipient) AND `e` tag with `["e", "<unsigned-9901-rumor-id>", "", "root"]`
 - **Kind 9904**: Requires `p` tag (recipient) AND `e` tag with `["e", "<unsigned-9901-rumor-id>", "", "root"]`
+- **Kind 9905**: Requires `e` tag (reservation thread ID) AND `p` tag (customer public key) - signed event
+- **Kind 31555**: Requires `d` tag (business identifier), `e` tag (reservation thread ID), `rating` tag (primary rating with "thumb"), and `verified` tag (base64-encoded transaction attestation) - signed public event
 
 ---
 
@@ -120,6 +126,7 @@ See [synvya-client-2](https://github.com/Synvya/synvya-client-2) `client/src/lib
 - Date-time format validation via `ajv-formats`
 - Automatic schema compilation at module load
 - Integration with NIP-44 encryption for payload security
+- Support for both unsigned rumor events (kinds 9901-9904) and signed events (kinds 9905, 31555)
 
 ---
 
