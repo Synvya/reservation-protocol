@@ -6,7 +6,7 @@ Reservation Protocol v1.0
 
 `draft` `optional`
 
-This NIP defines a protocol to manage reservations via Nostr. The term "reservations" is used as a broad term and could be applied to restaurants, hotels, or any other business offering appointments. This NIP also defines a business transaction attestation event associated with a succesfully completed reservation so that customers can issue a **verified business review**.
+This NIP defines a protocol to manage reservations via Nostr. The term "reservations" is used as a broad term and could be applied to restaurants, hotels, or any other business offering appointments. This NIP also defines a business transaction attestation event associated with a successfully completed reservation so that customers can issue a **verified business review**.
 
 The reservation process uses 4 different messages, each with its own kind, that are sent unsigned, sealed, and gift wrapped between the parties to maintain the privacy of the customer. Only the customer and the business are aware of the reservation.
 
@@ -37,10 +37,10 @@ The following tags are used across the different kinds defined by this NIP:
 - `tzid`: time zone of the reservation `time`, `earliest_time`, and `latest_time` Unix timestamps, as defined by the IANA Time Zone Database. e.g., `America/Costa_Rica`.
 - `duration`: duration of the reservation in seconds.
 - `name`: reservation holder. May be different from the party initiating the reservation flow.
-- `phone`: phone number for the reservation holder.
+- `telephone`: phone number for the reservation holder.
 - `email`: email for the reservation holder.
 - `earliest_time`: earliest start time Unix timestamp that the requestor would accept for the reservation.
-- `latest_time`: earliest time that the requestor would accept for the reservation.
+- `latest_time`: latest start time that the requestor would accept for the reservation.
 - `status`: status of the reservation as one of the following values `confirmed`, `declined`, or `cancelled`.
 - `broker`: set to `True` if the party initiating the reservation flow is not the reservation holder
 
@@ -100,6 +100,8 @@ The following tags are used across the different kinds defined by this NIP:
 
 ### Reservation Modification Request - Kind:9903
 
+`kind:9903` is used to propose a revised set of reservation terms for an existing reservation thread. It MAY be used by the business as a counter-proposal while responding to a `kind:9901` request, or by either party after a reservation has already been confirmed to propose a replacement reservation. The tags in the event describe the full proposed reservation state that the sender wants the recipient to evaluate.
+
 **Rumor Event Structure:**
 ```yaml
 {
@@ -113,9 +115,9 @@ The following tags are used across the different kinds defined by this NIP:
     ["party_size", "<integer between 1 and 20>"],
     ["time", "<unix timestamp in seconds>"],
     ["tzid", "<IANA Time Zone Database identifier>"], 
-    ["name", "<optional string, max 200 chars>"],           
-    ["telephone", "<optional string, 'tel:' URI as per RFC 3966>"],  # must be included if present in reservation.request
-    ["email", "<optional string, 'mailto:' URI as per RFC 6068>"],   # must be included if present in reservation.request
+    ["name", "<optional string, max 200 chars>"],
+    ["telephone", "<optional string, 'tel:' URI as per RFC 3966>"],  # if included, should match the reservation holder information for the thread
+    ["email", "<optional string, 'mailto:' URI as per RFC 6068>"],   # if included, should match the reservation holder information for the thread
     ["duration", <optional, duration of reservation in seconds>"],
     ["earliest_time", "<optional unix timestamp in seconds>"],
     ["latest_time", "<optional unix timestamp in seconds>"]
@@ -146,7 +148,7 @@ The following tags are used across the different kinds defined by this NIP:
     ["duration", <duration of reservation in seconds>"],
     # Additional tags MAY be included
   ],
-  "content": "<creservation modification response message in plain text>"
+  "content": "<reservation modification response message in plain text>"
   # Note: No signature field - this is an unsigned rumor
 }
 ```
@@ -163,23 +165,23 @@ The following tags are used across the different kinds defined by this NIP:
 3. Customer responds with `reservation.modification.response` `kind:9904` message to the business with `"status":"confirmed"` or `"status":"declined"`
 4. Business responds with `reservation.response` `kind:9902` message to the customer with matching status `confirmed` or `declined`
 
-### Succesful Reservation Modification by Customer
+### Successful Reservation Modification by Customer
 1. Customer sends `reservation.modification.request` `kind:9903` message to the business with proposed new time
 2. Business sends `reservation.modification.response` `kind:9904` message to the customer with `"status":"confirmed"` to indicate availability for the new time
 3. Customer sends `reservation.response` `kind:9902` message to the business with status `confirmed`
 
 
-### Unsuccesful Reservation Modification by Customer
+### Unsuccessful Reservation Modification by Customer
 1. Customer sends `reservation.modification.request` `kind:9903` message to the business with proposed new time
 2. Business sends `reservation.modification.response` `kind:9904` message to the customer with `"status":"declined"` to indicate lack of availability for the new time
 3. Customer sends `reservation.response` `kind:9902` message to the business with original time and status `"status":"confirmed"` to maintain original reservation or `"status":"cancelled"` to cancel the original reservation
 
 
-### Reservation Cancellation Initated by the Business
+### Reservation Cancellation Initiated by the Business
 1. Business sends `reservation.response` `kind:9902` message to the customer with `"status":"cancelled"`. Including a note in the `.content` field of the event is highly recommended. 
 
 
-### Reservation Cancellation Initated by the Customer
+### Reservation Cancellation Initiated by the Customer
 1. Customer sends `reservation.response` `kind:9902` message to the business with `"status":"cancelled"`. Including a note in the `.content` field of the event is highly recommended. 
 
 
@@ -200,7 +202,7 @@ Businesses MUST advertise their support for the Reservation Protocol using an ex
 ```
 
 ## Verified Business Reviews
-Customers who succesfully complete a business transaction after creating a reservation using the Reservation Protocol may issue a verified business review. Verified business reviews are reviews from real customers and should be considered more relevant than unverified reviews from users for whom it is not possible to determine if they have transacted with the business. 
+Customers who successfully complete a business transaction after creating a reservation using the Reservation Protocol may issue a verified business review. Verified business reviews are reviews from real customers and should be considered more relevant than unverified reviews from users for whom it is not possible to determine if they have transacted with the business.
 
 The Reservation Protocol supports verified business reviews by expanding upon reviews as specified by the [market specification](https://github.com/GammaMarkets/market-spec/blob/main/spec.md) addendum to [NIP-99](https://github.com/nostr-protocol/nips/blob/master/99.md).
 

@@ -115,7 +115,7 @@ allOf:
                   errorMessage: "status must be one of: confirmed, declined, or cancelled"
               additionalItems: false
             errorMessage:
-              contains: "tags must include a status tag with format ['status', '<confirmed|declined>']"
+              contains: "tags must include a status tag with format ['status', '<confirmed|declined|cancelled>']"
           - contains:
               type: array
               minItems: 2

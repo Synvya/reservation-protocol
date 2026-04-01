@@ -152,76 +152,111 @@ allOf:
                   additionalItems: false
             errorMessage:
               anyOf: "tags must include either a telephone tag or an email tag (one of email or telephone must be included)"
-          - contains:
-              type: array
-              minItems: 2
-              maxItems: 2
-              items:
-                - const: "name"
-                  description: "Tag identifier"
-                - type: string
-                  maxLength: 200
-                  description: "Reservation holder name (optional, max 200 chars). May be different from the party initiating the reservation flow."
-                  errorMessage: "name must be a string with max 200 characters"
-              additionalItems: false
+          - anyOf:
+              - not:
+                  contains:
+                    type: array
+                    minItems: 1
+                    items:
+                      - const: "name"
+              - contains:
+                  type: array
+                  minItems: 2
+                  maxItems: 2
+                  items:
+                    - const: "name"
+                      description: "Tag identifier"
+                    - type: string
+                      maxLength: 200
+                      description: "Reservation holder name (optional, max 200 chars). May be different from the party initiating the reservation flow."
+                      errorMessage: "name must be a string with max 200 characters"
+                  additionalItems: false
             errorMessage:
-              contains: "tags may include a name tag with format ['name', '<string, max 200 chars>']"
-          - contains:
-              type: array
-              minItems: 2
-              maxItems: 2
-              items:
-                - const: "duration"
-                  description: "Tag identifier"
-                - type: string
-                  pattern: "^[0-9]+$"
-                  description: "Duration of reservation in seconds (optional)"
-                  errorMessage: "duration must be a positive integer (duration in seconds)"
-              additionalItems: false
+              anyOf: "name tag, if present, must have format ['name', '<string, max 200 chars>']"
+          - anyOf:
+              - not:
+                  contains:
+                    type: array
+                    minItems: 1
+                    items:
+                      - const: "duration"
+              - contains:
+                  type: array
+                  minItems: 2
+                  maxItems: 2
+                  items:
+                    - const: "duration"
+                      description: "Tag identifier"
+                    - type: string
+                      pattern: "^[0-9]+$"
+                      description: "Duration of reservation in seconds (optional)"
+                      errorMessage: "duration must be a positive integer (duration in seconds)"
+                  additionalItems: false
             errorMessage:
-              contains: "tags may include a duration tag with format ['duration', '<duration in seconds>']"
-          - contains:
-              type: array
-              minItems: 2
-              maxItems: 2
-              items:
-                - const: "earliest_time"
-                  description: "Tag identifier"
-                - type: string
-                  pattern: "^[0-9]+$"
-                  description: "Earliest start time Unix timestamp that the requestor would accept for the reservation (optional)"
-                  errorMessage: "earliest_time must be a Unix timestamp in seconds"
-              additionalItems: false
+              anyOf: "duration tag, if present, must have format ['duration', '<duration in seconds>']"
+          - anyOf:
+              - not:
+                  contains:
+                    type: array
+                    minItems: 1
+                    items:
+                      - const: "earliest_time"
+              - contains:
+                  type: array
+                  minItems: 2
+                  maxItems: 2
+                  items:
+                    - const: "earliest_time"
+                      description: "Tag identifier"
+                    - type: string
+                      pattern: "^[0-9]+$"
+                      description: "Earliest start time Unix timestamp that the requestor would accept for the reservation (optional)"
+                      errorMessage: "earliest_time must be a Unix timestamp in seconds"
+                  additionalItems: false
             errorMessage:
-              contains: "tags may include an earliest_time tag with format ['earliest_time', '<unix timestamp in seconds>']"
-          - contains:
-              type: array
-              minItems: 2
-              maxItems: 2
-              items:
-                - const: "latest_time"
-                  description: "Tag identifier"
-                - type: string
-                  pattern: "^[0-9]+$"
-                  description: "Latest start time Unix timestamp that the requestor would accept for the reservation (optional)"
-                  errorMessage: "latest_time must be a Unix timestamp in seconds"
-              additionalItems: false
+              anyOf: "earliest_time tag, if present, must have format ['earliest_time', '<unix timestamp in seconds>']"
+          - anyOf:
+              - not:
+                  contains:
+                    type: array
+                    minItems: 1
+                    items:
+                      - const: "latest_time"
+              - contains:
+                  type: array
+                  minItems: 2
+                  maxItems: 2
+                  items:
+                    - const: "latest_time"
+                      description: "Tag identifier"
+                    - type: string
+                      pattern: "^[0-9]+$"
+                      description: "Latest start time Unix timestamp that the requestor would accept for the reservation (optional)"
+                      errorMessage: "latest_time must be a Unix timestamp in seconds"
+                  additionalItems: false
             errorMessage:
-              contains: "tags may include a latest_time tag with format ['latest_time', '<unix timestamp in seconds>']"
-          - contains:
-              type: array
-              minItems: 2
-              maxItems: 2
-              items:
-                - const: "broker"
-                  description: "Tag identifier"
-                - type: string
-                  enum: ["True", "False"]
-                  description: "Set to 'True' if the party initiating the reservation flow is not the reservation holder (optional boolean)"
-                  errorMessage: "broker must be 'True' or 'False'"
-              additionalItems: false
+              anyOf: "latest_time tag, if present, must have format ['latest_time', '<unix timestamp in seconds>']"
+          - anyOf:
+              - not:
+                  contains:
+                    type: array
+                    minItems: 1
+                    items:
+                      - const: "broker"
+              - contains:
+                  type: array
+                  minItems: 2
+                  maxItems: 2
+                  items:
+                    - const: "broker"
+                      description: "Tag identifier"
+                    - type: string
+                      enum: ["True", "False"]
+                      description: "Set to 'True' if the party initiating the reservation flow is not the reservation holder (optional boolean)"
+                      errorMessage: "broker must be 'True' or 'False'"
+                  additionalItems: false
             errorMessage:
-              contains: "tags may include a broker tag with format ['broker', '<True|False>']"
+              anyOf: "broker tag, if present, must have format ['broker', '<True|False>']"
     required:
       - kind
       - id
