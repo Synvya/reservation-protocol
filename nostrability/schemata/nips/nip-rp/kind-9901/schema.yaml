@@ -80,10 +80,21 @@ allOf:
                   description: "Business public key"
                   errorMessage: "p tag value must be a 64-character lowercase hex string"
                 - type: string
-                  description: "Recommended relay URL (optional)"
+                  description: "Optional compatibility relay URL hint"
               additionalItems: false
             errorMessage:
               contains: "tags must include at least one p tag identifying the business"
+          - contains:
+              type: array
+              minItems: 2
+              items:
+                - const: "relays"
+                  description: "Tag identifier"
+              description: "Author's preferred read relays for replies and follow-up messages"
+              additionalItems:
+                type: string
+            errorMessage:
+              contains: "tags must include a relays tag with format ['relays', '<relay1>', '<relay2>', ...]"
           - contains:
               type: array
               minItems: 2
