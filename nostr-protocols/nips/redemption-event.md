@@ -27,7 +27,7 @@ The kind number is **proposed** pending NIP-RP acceptance and may be reassigned 
   "kind": 9906,
   "tags": [
     ["p", "<customerPublicKey>"],              # the diner who redeemed
-    ["a", "30402:<businessPublicKey>:<d-tag>"],# the redeemed offer (replaceable address); '30405:...' for collection-scope
+    ["a", "31556:<businessPublicKey>:<d-tag>"],# the redeemed offer (replaceable address); canonical form is kind:31556 (offers). May also reference kind:30402:<businessPublicKey>:<d-tag> (menu items) or kind:30405:... (collections) for backwards compatibility.
     ["e", "<offer-event-id>"],                 # optional: pin to a specific publish of the offer
     ["e", "<reservation-thread-id>", "", "reservation"], # optional: NIP-RP reservation thread (kind:9901 id) if the redemption happened during a reservation
     ["redeemed_at", "<unix timestamp seconds>"],
@@ -44,7 +44,7 @@ The event is **signed** by the business. Recipients verify the signature and tha
 ## Issuance Rules
 
 - A redemption event MUST be issued by the business that published the original offer (`event.pubkey == a-tag.businessPublicKey`).
-- A redemption event MUST reference the offer being redeemed via an `a` tag in the form `30402:<businessPublicKey>:<d-tag>` (or `30405:...` for collection-scope redemptions).
+- A redemption event MUST reference the offer being redeemed via an `a` tag in the form `31556:<businessPublicKey>:<d-tag>` (offer-scope — canonical form). May also reference kind:30402 or kind:30405 for backwards compatibility with menu-item or collection-scope offers.
 - A redemption event SHOULD include a `p` tag identifying the customer pubkey when the customer's identity is known. If the redemption is anonymous (e.g. cash-paid walk-in claiming a public offer), the `p` tag MAY be omitted.
 - The event SHOULD be published to relays the business writes to per NIP-65, and MAY additionally be wrapped via NIP-17 private direct message to the customer if the redemption is privacy-sensitive (in which case the public publish carries an aggregate-only payload — see Privacy Considerations).
 - Multiple redemption events MAY reference the same offer. An offer that permits multiple redemptions per customer or across customers produces one redemption event per redemption.
