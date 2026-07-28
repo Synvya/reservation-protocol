@@ -43,7 +43,7 @@ The following tags are used across the different kinds defined by this NIP:
 - `earliest_time`: earliest start time Unix timestamp that the requestor would accept for the reservation.
 - `latest_time`: latest start time that the requestor would accept for the reservation.
 - `status`: status of the reservation as one of the following values `confirmed`, `declined`, or `cancelled`.
-- `broker`: set to `True` if the party initiating the reservation flow is not the reservation holder
+- `broker`: set to `true` if the party initiating the reservation flow is not the reservation holder
 
 ## Relay Routing
 
@@ -78,10 +78,10 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
     ["name", "<string, max 200 chars>"],
     ["telephone", "<optional string, 'tel:' URI as per RFC 3966>"], # one of email or telephone must be included 
     ["email", "<optional string, 'mailto:' URI as per RFC 6068>"],  # one of email or telephone must be included
-    ["duration", <optional, duration of reservation in seconds>"],
+    ["duration", "<optional duration of reservation in seconds>"],
     ["earliest_time", "<optional unix timestamp in seconds>"],
     ["latest_time", "<optional unix timestamp in seconds>"],
-    ["broker", "<optional boolean, `True` | 'False'>"] 
+    ["broker", "<optional boolean, 'true' | 'false'>"] 
   ],
   "content": "<reservation request message in plain text>"
   # Note: No signature field - this is an unsigned rumor
@@ -106,7 +106,7 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
     ["status", "<confirmed|declined|cancelled>"],
     ["time", "<unix timestamp in seconds>"],
     ["tzid", "<IANA Time Zone Database identifier>"],
-    ["duration", <duration of reservation in seconds>"],
+    ["duration", "<duration of reservation in seconds>"],
     # Additional tags MAY be included
   ],
   "content": "<reservation response message in plain text>"
@@ -137,7 +137,7 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
     ["name", "<optional string, max 200 chars>"],
     ["telephone", "<optional string, 'tel:' URI as per RFC 3966>"],  # if included, should match the reservation holder information for the thread
     ["email", "<optional string, 'mailto:' URI as per RFC 6068>"],   # if included, should match the reservation holder information for the thread
-    ["duration", <optional, duration of reservation in seconds>"],
+    ["duration", "<optional duration of reservation in seconds>"],
     ["earliest_time", "<optional unix timestamp in seconds>"],
     ["latest_time", "<optional unix timestamp in seconds>"]
     # Additional tags MAY be included
@@ -162,10 +162,10 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
     ["p", "<recipientPublicKey>"],
     ["relays", "<authorReadRelay1>", "<authorReadRelay2>", "..."],
     ["e", "<unsigned-9901-rumor.id>", "", "root"], # connects message to reservation thread
-    ["status", "<confirmed|declined|cancelled>"],
+    ["status", "<confirmed|declined>"],
     ["time", "<unix timestamp in seconds>"],
     ["tzid", "<IANA Time Zone Database identifier>"],
-    ["duration", <duration of reservation in seconds>"],
+    ["duration", "<duration of reservation in seconds>"],
     # Additional tags MAY be included
   ],
   "content": "<reservation modification response message in plain text>"
@@ -232,7 +232,7 @@ Once a reservation is fulfilled, for example when the restaurant check is closed
 - It's created before the review is written
 - Does not endorse the content of the review
 
-Businesses MUST only issue a token if the `reservation.request` - `kind:9901` message had no `broker` tag or the tag was set to `False`. A token MUST never be issued for a reservation when the `broker` tag is set to `True`.
+Businesses MUST only issue a token if the `reservation.request` - `kind:9901` message had no `broker` tag or the tag was set to `false`. A token MUST never be issued for a reservation when the `broker` tag is set to `true`.
 
 The verified business review follows the [QTS guidelines](https://habla.news/u/arkinox@arkinox.tech/DLAfzJJpQDS4vj3wSleum) with labels specified by the business to ensure review uniformity regardless of the application used by the customer to issue the review. 
 
@@ -254,7 +254,7 @@ The event is intended as a business transaction attestation token that the custo
   "tags": [
     ["p", "<customerPublicKey>"],
     ["e", "<unsigned-9901-rumor.id>", "", "root"], # connects message to reservation thread
-    ["time", "<unix timestamp in seconds>"],
+    ["time", "<unix timestamp in seconds>"], # reservation start time (same value used across the thread); token issuance time is created_at
     ["tzid", "<IANA Time Zone Database identifier>"],
     ["qts_labels", "label1, label2, ..., labelN"] # comma separated list of labels
     

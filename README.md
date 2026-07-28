@@ -7,7 +7,7 @@ This NIP defines a protocol to manage reservations via Nostr. The term "reservat
 ## Contents
 
 - [`nostr-protocols/nips/rp.md`](./nostr-protocols/nips/rp.md) - Complete protocol specification
-- [`nostrability/schemata/nips/nip-rp/`](./nostrability/schemata/nips/nip-rp/) - YAML Schema definitions for reservation message kinds (9901-9905)
+- [`nostrability/schemata/nips/nip-rp/`](./nostrability/schemata/nips/nip-rp/) - JSON Schema definitions (authored in YAML) for reservation message kinds (9901-9905)
 
 ## Usage
 
@@ -16,4 +16,4 @@ Schemas can be used for validation in any implementation. Each schema is located
 ## Reference Implementation
 
 - See [Synvya Client](https://github.com/Synvya/client) for a reference implementation of the business side of the protocol.
-- See [AI Concierge](https://github.com/Synvya/ai-concierge) for a reference implementation of the consumer side of the protocol.
+- See [Synvya Diners](https://github.com/Synvya/diners) for a reference implementation of the consumer side of the protocol.
