@@ -33,6 +33,7 @@ The following tags are used across the different kinds defined by this NIP:
 - `p`: public key of the recipient of the message.
 - `relays`: one or more relay URLs identifying the author's preferred read relays for replies and follow-up messages in the reservation thread.
 - `e`: tag used to connect all messages of the same reservation request (the reservation thread). Contains the `.id` field of the original `kind:9901` reservation request.
+- `a`: optional NIP-01 addressable event coordinate (`<kind>:<pubkey>:<d-identifier>`) identifying the specific bookable asset a `kind:9901` request targets, such as a NIP-52 time-based calendar event (`kind:31923`). If omitted, the request targets the business's default reservable resource (e.g., a table).
 - `party_size`: number of people in the reservation.
 - `time`: inclusive reservation start Unix timestamp in seconds.
 - `tzid`: time zone of the reservation `time`, `earliest_time`, and `latest_time` Unix timestamps, as defined by the IANA Time Zone Database. e.g., `America/Costa_Rica`.
@@ -44,6 +45,16 @@ The following tags are used across the different kinds defined by this NIP:
 - `latest_time`: latest start time that the requestor would accept for the reservation.
 - `status`: status of the reservation as one of the following values `confirmed`, `declined`, or `cancelled`.
 - `broker`: set to `true` if the party initiating the reservation flow is not the reservation holder
+
+### Bookable Asset Reference
+
+A `kind:9901` request MAY include an `a` tag identifying the specific bookable asset it targets, using a NIP-01 addressable event coordinate of the form `<kind>:<pubkey>:<d-identifier>`. This lets one business offer distinct reservable assets and lets the request name exactly which one it wants — for example a scheduled event published as a NIP-52 time-based calendar event (`kind:31923`):
+
+```yaml
+["a", "31923:<businessPublicKey>:<event-d-identifier>"]
+```
+
+If the `a` tag is omitted, the request targets the business's default/general reservable resource — for a restaurant, a table. The asset is established by the `kind:9901` request and applies to the whole thread; follow-up messages (`kind:9902`/`9903`/`9904`) identify the thread via the `e` tag and need not repeat the `a` tag.
 
 ## Relay Routing
 
@@ -81,6 +92,7 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
     ["duration", "<optional duration of reservation in seconds>"],
     ["earliest_time", "<optional unix timestamp in seconds>"],
     ["latest_time", "<optional unix timestamp in seconds>"],
+    ["a", "<optional addressable event coordinate '<kind>:<pubkey>:<d>' naming the bookable asset, e.g. a NIP-52 kind:31923 event; omit for a general reservation such as a table>"],
     ["broker", "<optional boolean, 'true' | 'false'>"] 
   ],
   "content": "<reservation request message in plain text>"
