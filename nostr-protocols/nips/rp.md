@@ -35,8 +35,9 @@ The following tags are used across the different kinds defined by this NIP:
 - `e`: tag used to connect all messages of the same reservation request (the reservation thread). Contains the `.id` field of the original `kind:9901` reservation request.
 - `a`: optional NIP-01 addressable event coordinate (`<kind>:<pubkey>:<d-identifier>`) identifying the specific bookable asset a `kind:9901` request targets, such as a NIP-52 time-based calendar event (`kind:31923`). If omitted, the request targets the business's default reservable resource (e.g., a table).
 - `party_size`: number of people in the reservation.
-- `time`: inclusive reservation start Unix timestamp in seconds.
-- `tzid`: time zone of the reservation `time`, `earliest_time`, and `latest_time` Unix timestamps, as defined by the IANA Time Zone Database. e.g., `America/Costa_Rica`.
+- `time`: inclusive reservation start Unix timestamp in seconds. **Time-based reservations only** (see [Time-Based vs Date-Based Reservations](#time-based-vs-date-based-reservations)).
+- `tzid`: time zone of the reservation `time`, `earliest_time`, and `latest_time` Unix timestamps, as defined by the IANA Time Zone Database. e.g., `America/Costa_Rica`. **Time-based reservations only; MUST be omitted for date-based reservations.**
+- `date`: inclusive reservation start date in ISO 8601 `YYYY-MM-DD` format, interpreted in the business's local calendar. **Date-based (all-day) reservations only.** Carries no time-of-day and no timezone — a floating date, as with NIP-52 `kind:31922` and iCalendar `VALUE=DATE`. Mutually exclusive with `time`/`tzid`.
 - `duration`: duration of the reservation in seconds.
 - `name`: reservation holder. May be different from the party initiating the reservation flow.
 - `telephone`: phone number for the reservation holder.
@@ -55,6 +56,15 @@ A `kind:9901` request MAY include an `a` tag identifying the specific bookable a
 ```
 
 If the `a` tag is omitted, the request targets the business's default/general reservable resource — for a restaurant, a table. The asset is established by the `kind:9901` request and applies to the whole thread; follow-up messages (`kind:9902`/`9903`/`9904`) identify the thread via the `e` tag and need not repeat the `a` tag.
+
+### Time-Based vs Date-Based Reservations
+
+A reservation is either **time-based** or **date-based**, and every message in the thread (`kind:9901`–`9905`) uses the same form, fixed by the initial `kind:9901`:
+
+- **Time-based** (e.g., a 7 pm dinner, a 10 am class): carries `["time", "<unix timestamp in seconds>"]` **and** `["tzid", "<IANA Time Zone Database identifier>"]`. The timestamp is the absolute start instant; `tzid` gives the business-local wall clock for display and DST.
+- **Date-based** (all-day / multi-day, e.g., a hotel night, an all-day workshop): carries `["date", "<YYYY-MM-DD>"]`, and **no** `time` and **no** `tzid`. A date is a floating calendar day in the business's locale — it has no time-of-day, so a timezone would be meaningless and MUST be omitted. Attaching one reintroduces the off-by-one-day errors that iCalendar `VALUE=DATE` and NIP-52 `kind:31922` exist to avoid.
+
+The two forms are **mutually exclusive**: every message MUST include exactly one of (`time` + `tzid`) or (`date`). Clients MUST NOT encode an all-day reservation as a `time` at midnight with a 24-hour `duration`. When the reservation targets a bookable asset via an `a` tag, the asset kind agrees with the form — a NIP-52 `kind:31923` (time-based) event pairs with `time` + `tzid`; a `kind:31922` (date-based) event pairs with `date`. The `duration`, `earliest_time`, and `latest_time` tags apply to time-based reservations only.
 
 ## Relay Routing
 
@@ -84,8 +94,8 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
     ["p", "<businessPublicKey>"],
     ["relays", "<customerReadRelay1>", "<customerReadRelay2>", "..."],
     ["party_size", "<integer between 1 and 20>"],
-    ["time", "<unix timestamp in seconds>"],
-    ["tzid", "<IANA Time Zone Database identifier>"],
+    ["time", "<unix timestamp in seconds>"],   # time-based; for date-based use ["date", "<YYYY-MM-DD>"] instead — see Time-Based vs Date-Based Reservations
+    ["tzid", "<IANA Time Zone Database identifier>"],   # omitted for date-based
     ["name", "<string, max 200 chars>"],
     ["telephone", "<optional string, 'tel:' URI as per RFC 3966>"], # one of email or telephone must be included 
     ["email", "<optional string, 'mailto:' URI as per RFC 6068>"],  # one of email or telephone must be included
@@ -116,8 +126,8 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
     ["relays", "<authorReadRelay1>", "<authorReadRelay2>", "..."],
     ["e", "<unsigned-9901-rumor.id>", "", "root"], # connects message to reservation thread
     ["status", "<confirmed|declined|cancelled>"],
-    ["time", "<unix timestamp in seconds>"],
-    ["tzid", "<IANA Time Zone Database identifier>"],
+    ["time", "<unix timestamp in seconds>"],   # time-based; for date-based use ["date", "<YYYY-MM-DD>"] instead — see Time-Based vs Date-Based Reservations
+    ["tzid", "<IANA Time Zone Database identifier>"],   # omitted for date-based
     ["duration", "<duration of reservation in seconds>"],
     # Additional tags MAY be included
   ],
@@ -144,8 +154,8 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
     ["relays", "<authorReadRelay1>", "<authorReadRelay2>", "..."],
     ["e", "<unsigned-9901-rumor.id>", "", "root"], # connects message to reservation thread
     ["party_size", "<integer between 1 and 20>"],
-    ["time", "<unix timestamp in seconds>"],
-    ["tzid", "<IANA Time Zone Database identifier>"], 
+    ["time", "<unix timestamp in seconds>"],   # time-based; for date-based use ["date", "<YYYY-MM-DD>"] instead — see Time-Based vs Date-Based Reservations
+    ["tzid", "<IANA Time Zone Database identifier>"],   # omitted for date-based 
     ["name", "<optional string, max 200 chars>"],
     ["telephone", "<optional string, 'tel:' URI as per RFC 3966>"],  # if included, should match the reservation holder information for the thread
     ["email", "<optional string, 'mailto:' URI as per RFC 6068>"],   # if included, should match the reservation holder information for the thread
@@ -175,8 +185,8 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
     ["relays", "<authorReadRelay1>", "<authorReadRelay2>", "..."],
     ["e", "<unsigned-9901-rumor.id>", "", "root"], # connects message to reservation thread
     ["status", "<confirmed|declined>"],
-    ["time", "<unix timestamp in seconds>"],
-    ["tzid", "<IANA Time Zone Database identifier>"],
+    ["time", "<unix timestamp in seconds>"],   # time-based; for date-based use ["date", "<YYYY-MM-DD>"] instead — see Time-Based vs Date-Based Reservations
+    ["tzid", "<IANA Time Zone Database identifier>"],   # omitted for date-based
     ["duration", "<duration of reservation in seconds>"],
     # Additional tags MAY be included
   ],
