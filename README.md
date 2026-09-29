@@ -1,19 +1,19 @@
-Reservation Protocol
+# Reservation Protocol (NIP-RP) — archived
 
-This repository contains the protocol specification and YAML schemas for NIP-RP (Reservation Protocol).
+**This repository is archived.** NIP-RP has been superseded by the **Open Markets Bookings** proposal, which Synvya is submitting to the Open Markets Foundation specification. Bookings covers the same flows (request, confirm, decline, cancel, modify) plus availability queries and payments, on a single private message kind (`1331`) instead of kinds 9901–9905.
 
-This NIP defines a protocol to manage reservations via Nostr. The term "reservations" is used as a broad term and could be applied to restaurants, hotels, or any other business offering appointments. This NIP also defines a business transaction attestation event associated with a succesfully completed reservation so that customers can issue a **verified business review**.
+## Where to go
 
-## Contents
+- **The proposal:** `proposals/bookings.md` in [OpenMarketsFoundation/specification](https://github.com/OpenMarketsFoundation/specification) (pull request pending). Until it is open, the current draft is at [Synvya/docs → open-markets-bookings.md](https://github.com/Synvya/docs/blob/alejandro-dev/06-domains-and-services/specs/open-markets-bookings.md).
+- **Migrating an implementation from NIP-RP:** [Synvya/docs → migration-nip-rp-to-bookings.md](https://github.com/Synvya/docs/blob/alejandro-dev/06-domains-and-services/specs/migration-nip-rp-to-bookings.md) maps every NIP-RP kind, tag, and field to its Bookings equivalent.
+- **Verified reviews** (formerly `kind:9905` / `kind:31555`): will be proposed separately to Open Markets as a lane-neutral transaction attestation.
+- **Offer redemption** (`redemption-event.md`, `kind:9906`): not part of bookings; kept here only as history.
 
-- [`nostr-protocols/nips/rp.md`](./nostr-protocols/nips/rp.md) - Complete protocol specification
-- [`nostrability/schemata/nips/nip-rp/`](./nostrability/schemata/nips/nip-rp/) - JSON Schema definitions (authored in YAML) for reservation message kinds (9901-9905)
+## What is here
 
-## Usage
+The last NIP-RP specification and its JSON Schemas remain in this repository unchanged, for implementations that still read the legacy kinds during their transition:
 
-Schemas can be used for validation in any implementation. Each schema is located in its respective kind directory (e.g., `kind-9901/schema.yaml`).
+- [`nostr-protocols/nips/rp.md`](./nostr-protocols/nips/rp.md) — the NIP-RP specification (kinds 9901–9905, `kind:31555` verified reviews)
+- [`nostrability/schemata/nips/nip-rp/`](./nostrability/schemata/nips/nip-rp/) — JSON Schemas (YAML) for kinds 9901–9905 and the `verified` tag
 
-## Reference Implementation
-
-- See [Synvya Client](https://github.com/Synvya/client) for a reference implementation of the business side of the protocol.
-- See [Synvya Diners](https://github.com/Synvya/diners) for a reference implementation of the consumer side of the protocol.
+No further changes will be made here.
