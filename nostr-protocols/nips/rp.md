@@ -31,7 +31,7 @@ Clients must support `kind:9901` and `kind:9902` messages. Support for `kind:990
 
 The following tags are used across the different kinds defined by this NIP:
 - `p`: public key of the recipient of the message.
-- `relays`: one or more relay URLs identifying the author's preferred read relays for replies and follow-up messages in the reservation thread.
+- `relays`: **deprecated, optional.** One or more relay URLs identifying the author's preferred read relays. Superseded by the `kind:10050` DM relay list — see [Relay Routing](#relay-routing). Retained so that clients written against earlier revisions keep working.
 - `e`: tag used to connect all messages of the same reservation request (the reservation thread). Contains the `.id` field of the original `kind:9901` reservation request.
 - `a`: optional NIP-01 addressable event coordinate (`<kind>:<pubkey>:<d-identifier>`) identifying the specific bookable asset a `kind:9901` request targets, such as a NIP-52 time-based calendar event (`kind:31923`). If omitted, the request targets the business's default reservable resource (e.g., a table).
 - `party_size`: number of people in the reservation.
@@ -68,18 +68,28 @@ The two forms are **mutually exclusive**: every message MUST include exactly one
 
 ## Relay Routing
 
-This NIP follows the outbox model described by [NIP-65](https://github.com/nostr-protocol/nips/blob/master/65.md) for routing reservation rumors between the customer and the business.
+This NIP routes reservation rumors using the DM relay list defined by [NIP-17](https://github.com/nostr-protocol/nips/blob/master/17.md): `kind:10050`.
+
+Reservation rumors are gift-wrapped private messages. `kind:10050` is the list a user publishes to declare where they receive private messages, which is exactly the question routing has to answer. `kind:10002` relay list metadata ([NIP-65](https://github.com/nostr-protocol/nips/blob/master/65.md)) describes where a user reads and publishes public notes instead, and a relay carrying a user's public activity does not necessarily accept or serve gift wraps addressed to them.
+
+Clients MUST publish a `kind:10050` event listing the relays where they receive gift-wrapped messages.
 
 When sending a reservation rumor to a counterparty, clients MUST:
-1. Look up the recipient's latest `kind:10002` relay list metadata event.
-2. Publish the gift-wrapped event to the recipient's `read` relays from `kind:10002`. If a relay in `kind:10002` has no marker, it SHOULD be treated as both `read` and `write` as defined by NIP-65.
-3. Include a `["relays", "<relay1>", "<relay2>", ...]` tag in the unsigned rumor listing the author's own preferred `read` relays, so the recipient knows where to publish the next message in the reservation thread.
+1. Look up the recipient's latest `kind:10050` DM relay list event.
+2. Publish the gift-wrapped event to every relay that event lists.
 
-The `relays` tag acts as a return address. In a `kind:9901` event, it tells the business where to publish a `kind:9902` or `kind:9903` reply for the customer. In a response from the business, it tells the customer where to publish any follow-up messages for the business.
+A counterparty with no discoverable `kind:10050` is unroutable. Clients SHOULD report that condition rather than publishing to a guessed or default relay.
 
-Clients MUST include a `relays` tag in `kind:9901`, `kind:9902`, `kind:9903`, and `kind:9904` messages. If the recipient has no discoverable `kind:10002`, clients MAY fall back to the most recent `relays` tag seen for that counterparty in the reservation thread. The optional relay URL in the `p` tag MAY be used only as a final compatibility fallback when no better routing information is available.
+The `p` tag identifies the recipient's public key. It is not a routing mechanism.
 
-The `p` tag identifies the recipient's public key. Clients MUST use the `relays` tag and `kind:10002` relay list metadata as the primary routing mechanism for this protocol.
+### Legacy Routing Fallbacks
+
+Earlier revisions of this NIP required a `relays` tag on every message as an in-band return address, and routed on `kind:10002`. Both remain readable so that deployed clients keep working:
+
+- Clients MAY include a `relays` tag listing their own preferred read relays. Clients MUST NOT treat it as the only routing information they publish.
+- When a recipient has no discoverable `kind:10050`, clients MAY fall back, in this order: the most recent `relays` tag seen for that counterparty in the reservation thread, then the recipient's `kind:10002` read relays, then the optional relay URL in the `p` tag.
+
+Writers SHOULD publish a `kind:10050` and stop emitting `relays`. Readers SHOULD continue to accept `relays` until deployed clients have migrated.
 
 ### Reservation Request - Kind:9901
 
@@ -92,7 +102,7 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
   "kind": 9901,
   "tags": [
     ["p", "<businessPublicKey>"],
-    ["relays", "<customerReadRelay1>", "<customerReadRelay2>", "..."],
+    ["relays", "<customerReadRelay1>", "<customerReadRelay2>", "..."],   # deprecated, optional — routing uses the recipient's kind:10050
     ["party_size", "<integer between 1 and 20>"],
     ["time", "<unix timestamp in seconds>"],   # time-based; for date-based use ["date", "<YYYY-MM-DD>"] instead — see Time-Based vs Date-Based Reservations
     ["tzid", "<IANA Time Zone Database identifier>"],   # omitted for date-based
@@ -123,7 +133,7 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
   "kind": 9902,
   "tags": [
     ["p", "<recipientPublicKey>"],
-    ["relays", "<authorReadRelay1>", "<authorReadRelay2>", "..."],
+    ["relays", "<authorReadRelay1>", "<authorReadRelay2>", "..."],   # deprecated, optional — routing uses the recipient's kind:10050
     ["e", "<unsigned-9901-rumor.id>", "", "root"], # connects message to reservation thread
     ["status", "<confirmed|declined|cancelled>"],
     ["time", "<unix timestamp in seconds>"],   # time-based; for date-based use ["date", "<YYYY-MM-DD>"] instead — see Time-Based vs Date-Based Reservations
@@ -151,7 +161,7 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
   "kind": 9903,
   "tags": [
     ["p", "<recipientPublicKey>"],
-    ["relays", "<authorReadRelay1>", "<authorReadRelay2>", "..."],
+    ["relays", "<authorReadRelay1>", "<authorReadRelay2>", "..."],   # deprecated, optional — routing uses the recipient's kind:10050
     ["e", "<unsigned-9901-rumor.id>", "", "root"], # connects message to reservation thread
     ["party_size", "<integer between 1 and 20>"],
     ["time", "<unix timestamp in seconds>"],   # time-based; for date-based use ["date", "<YYYY-MM-DD>"] instead — see Time-Based vs Date-Based Reservations
@@ -182,7 +192,7 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
   "kind": 9904,
   "tags": [
     ["p", "<recipientPublicKey>"],
-    ["relays", "<authorReadRelay1>", "<authorReadRelay2>", "..."],
+    ["relays", "<authorReadRelay1>", "<authorReadRelay2>", "..."],   # deprecated, optional — routing uses the recipient's kind:10050
     ["e", "<unsigned-9901-rumor.id>", "", "root"], # connects message to reservation thread
     ["status", "<confirmed|declined>"],
     ["time", "<unix timestamp in seconds>"],   # time-based; for date-based use ["date", "<YYYY-MM-DD>"] instead — see Time-Based vs Date-Based Reservations
@@ -197,36 +207,36 @@ The `p` tag identifies the recipient's public key. Clients MUST use the `relays`
 ## Protocol Flow
 
 ### Simple Reservation Request 
-1. Customer fetches the business's `kind:10002` relay list metadata event
-2. Customer sends `reservation.request` `kind:9901` message to the business by publishing the gift wrap to the business's `read` relays and includes the customer's own `read` relays in the `relays` tag
-3. Business responds with `reservation.response` `kind:9902` message to the customer with `"status":"confirmed"` or `"status":"declined"` by publishing the gift wrap to the customer's `read` relays hinted in the `relays` tag or discoverable from the customer's `kind:10002`
+1. Customer fetches the business's `kind:10050` DM relay list event
+2. Customer sends `reservation.request` `kind:9901` message to the business by publishing the gift wrap to the relays the business's `kind:10050` lists
+3. Business responds with `reservation.response` `kind:9902` message to the customer with `"status":"confirmed"` or `"status":"declined"` by publishing the gift wrap to the relays the customer's `kind:10050` lists
 4. Message exchange ends
 
 ### Reservation Request With Business Suggesting Alternative Time
-1. Customer fetches the business's `kind:10002` relay list metadata event
-2. Customer sends `reservation.request` `kind:9901` message to the business by publishing the gift wrap to the business's `read` relays and includes the customer's own `read` relays in the `relays` tag
-3. Business responds with `reservation.modification.request` `kind:9903` message to the customer with proposed new time, publishing the gift wrap to the customer's `read` relays hinted in the request's `relays` tag or discoverable from the customer's `kind:10002`
-4. Customer responds with `reservation.modification.response` `kind:9904` message to the business with `"status":"confirmed"` or `"status":"declined"`, publishing the gift wrap to the business's `read` relays hinted in the business's `relays` tag or discoverable from the business's `kind:10002`
+1. Customer fetches the business's `kind:10050` DM relay list event
+2. Customer sends `reservation.request` `kind:9901` message to the business by publishing the gift wrap to the relays the business's `kind:10050` lists
+3. Business responds with `reservation.modification.request` `kind:9903` message to the customer with proposed new time, publishing the gift wrap to the relays the customer's `kind:10050` lists
+4. Customer responds with `reservation.modification.response` `kind:9904` message to the business with `"status":"confirmed"` or `"status":"declined"`, publishing the gift wrap to the relays the business's `kind:10050` lists
 5. Business responds with `reservation.response` `kind:9902` message to the customer with matching status `confirmed` or `declined`
 
 ### Successful Reservation Modification by Customer
-1. Customer sends `reservation.modification.request` `kind:9903` message to the business with proposed new time, publishing to the business's `read` relays discovered from `kind:10002` or the latest routing hints available in the reservation thread
-2. Business sends `reservation.modification.response` `kind:9904` message to the customer with `"status":"confirmed"` to indicate availability for the new time, publishing to the customer's `read` relays discovered from `kind:10002` or the latest routing hints available in the reservation thread
-3. Customer sends `reservation.response` `kind:9902` message to the business with status `confirmed`, publishing to the business's `read` relays discovered from `kind:10002` or the latest routing hints available in the reservation thread
+1. Customer sends `reservation.modification.request` `kind:9903` message to the business with proposed new time, publishing to the relays the business's `kind:10050` lists
+2. Business sends `reservation.modification.response` `kind:9904` message to the customer with `"status":"confirmed"` to indicate availability for the new time, publishing to the relays the customer's `kind:10050` lists
+3. Customer sends `reservation.response` `kind:9902` message to the business with status `confirmed`, publishing to the relays the business's `kind:10050` lists
 
 
 ### Unsuccessful Reservation Modification by Customer
-1. Customer sends `reservation.modification.request` `kind:9903` message to the business with proposed new time, publishing to the business's `read` relays discovered from `kind:10002` or the latest routing hints available in the reservation thread
-2. Business sends `reservation.modification.response` `kind:9904` message to the customer with `"status":"declined"` to indicate lack of availability for the new time, publishing to the customer's `read` relays discovered from `kind:10002` or the latest routing hints available in the reservation thread
-3. Customer sends `reservation.response` `kind:9902` message to the business with original time and status `"status":"confirmed"` to maintain original reservation or `"status":"cancelled"` to cancel the original reservation, publishing to the business's `read` relays discovered from `kind:10002` or the latest routing hints available in the reservation thread
+1. Customer sends `reservation.modification.request` `kind:9903` message to the business with proposed new time, publishing to the relays the business's `kind:10050` lists
+2. Business sends `reservation.modification.response` `kind:9904` message to the customer with `"status":"declined"` to indicate lack of availability for the new time, publishing to the relays the customer's `kind:10050` lists
+3. Customer sends `reservation.response` `kind:9902` message to the business with original time and status `"status":"confirmed"` to maintain original reservation or `"status":"cancelled"` to cancel the original reservation, publishing to the relays the business's `kind:10050` lists
 
 
 ### Reservation Cancellation Initiated by the Business
-1. Business sends `reservation.response` `kind:9902` message to the customer with `"status":"cancelled"`, publishing to the customer's `read` relays discovered from `kind:10002` or the latest routing hints available in the reservation thread. Including a note in the `.content` field of the event is highly recommended. 
+1. Business sends `reservation.response` `kind:9902` message to the customer with `"status":"cancelled"`, publishing to the relays the customer's `kind:10050` lists. Including a note in the `.content` field of the event is highly recommended. 
 
 
 ### Reservation Cancellation Initiated by the Customer
-1. Customer sends `reservation.response` `kind:9902` message to the business with `"status":"cancelled"`, publishing to the business's `read` relays discovered from `kind:10002` or the latest routing hints available in the reservation thread. Including a note in the `.content` field of the event is highly recommended. 
+1. Customer sends `reservation.response` `kind:9902` message to the business with `"status":"cancelled"`, publishing to the relays the business's `kind:10050` lists. Including a note in the `.content` field of the event is highly recommended. 
 
 
 ## Business Discovery 
