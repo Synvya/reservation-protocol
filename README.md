@@ -1,11 +1,10 @@
 # Reservation Protocol (NIP-RP) — archived
 
-**This repository is archived.** NIP-RP has been superseded by the **Open Markets Bookings** proposal, which Synvya is submitting to the Open Markets Foundation specification. Bookings covers the same flows (request, confirm, decline, cancel, modify) plus availability queries and payments, on a single private message kind (`1331`) instead of kinds 9901–9905.
+**This repository is archived.** NIP-RP has been superseded by the **Open Markets Bookings** proposal, which Synvya has submitted to the Open Markets Foundation specification. Bookings covers the same flows (request, confirm, decline, cancel, modify) plus availability queries and payments, on a single private message kind (`1331`) instead of kinds 9901–9905.
 
 ## Where to go
 
-- **The proposal:** `proposals/bookings.md` in [OpenMarketsFoundation/specification](https://github.com/OpenMarketsFoundation/specification) (pull request pending). Until it is open, the current draft is at [Synvya/docs → open-markets-bookings.md](https://github.com/Synvya/docs/blob/alejandro-dev/06-domains-and-services/specs/open-markets-bookings.md).
-- **Migrating an implementation from NIP-RP:** [Synvya/docs → migration-nip-rp-to-bookings.md](https://github.com/Synvya/docs/blob/alejandro-dev/06-domains-and-services/specs/migration-nip-rp-to-bookings.md) maps every NIP-RP kind, tag, and field to its Bookings equivalent.
+- **The proposal:** [OpenMarketsFoundation/specification#17](https://github.com/OpenMarketsFoundation/specification/pull/17) adds `proposals/bookings.md` and its schemas under `proposals/bookings/schemata/`.
 - **Verified reviews** (formerly `kind:9905` / `kind:31555`): will be proposed separately to Open Markets as a lane-neutral transaction attestation.
 - **Offer redemption** (`redemption-event.md`, `kind:9906`): not part of bookings; kept here only as history.
 
